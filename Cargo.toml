@@ -1,0 +1,8 @@
+[package]
+name = "z-machine"
+version = "0.1.0"
+authors = ["Eduard Stefes <eduard.stefes@swissbit.com>"]
+
+[dependencies]
+qml = {  path = "../qml-rust/" }
+lazy_static = "*"
