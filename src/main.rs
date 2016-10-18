@@ -6,12 +6,6 @@ use zfs::*;
 extern crate qml;
 use qml::*;
 
-Q_LISTMODEL!{
-    pub TestModel {
-        name: String,
-        number: i32,
-    }
-}
 
 pub struct AppController {
     volume_model: Arc<Mutex<Box<QListModel<'static>>>>,
@@ -28,7 +22,8 @@ impl AppController {
     }
     pub fn on_volume_index_changed(&self, index: usize) {
         let volumes = get_volumes();
-        let ref mut s: QListModel = **self.snapshot_model.as_ref().lock().expect("snapshot_model locked!");
+        let ref mut s: QListModel =
+            **self.snapshot_model.as_ref().lock().expect("snapshot_model locked!");
 
         s.clear();
         let snapshots = get_snapshots(volumes[index].path.clone());
@@ -36,9 +31,7 @@ impl AppController {
             s.insert_row(qvarlist![snapshot.name.clone()].into_iter());
         }
     }
-    pub fn on_snapshot_index_changed(&self, index: usize) {
-
-    }
+    pub fn on_snapshot_index_changed(&self, index: usize) {}
 }
 
 
@@ -62,8 +55,20 @@ impl QAppCallback {
     }
 }
 
+Q_LISTMODEL_ITEM!{
+    pub TestModel<TestModelItem> {
+        name: String,
+    }
+}
+
+impl TestModelItem {
+    pub fn new() -> TestModelItem {
+        TestModelItem { name: "test".into() }
+    }
+}
 
 fn main() {
+
     let mut engine = QmlEngine::new();
     let vol_model = Arc::new(Mutex::new(QListModel::new(&["name"])));
     let snap_model = Arc::new(Mutex::new(QListModel::new(&["name"])));
