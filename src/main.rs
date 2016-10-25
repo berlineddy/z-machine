@@ -6,7 +6,7 @@ use appctrl::*;
 
 #[macro_use]
 extern crate qml;
-use qml::{QmlEngine,QObjectMacro};
+use qml::{QmlEngine, QObjectMacro};
 
 
 
@@ -14,6 +14,8 @@ fn main() {
     let mut engine = QmlEngine::new();
     let vol_model = Arc::new(Mutex::new(VolumeModel::new()));
     let snap_model = Arc::new(Mutex::new(SnapshotModel::new()));
+    let cur_fs_model = Arc::new(Mutex::new(FilesystemModel::new()));
+    let sel_fs_model = Arc::new(Mutex::new(FilesystemModel::new()));
 
 
     let volumes = get_volumes();
@@ -22,7 +24,10 @@ fn main() {
             .insert_item(VolumeItem::new(volume.name.clone(), volume.path.clone()));
     }
 
-    let appcallback = QAppCallback::new(AppController::new(vol_model.clone(), snap_model.clone()));
+    let appcallback = QAppCallback::new(AppController::new(vol_model.clone(),
+                                                           snap_model.clone(),
+                                                           cur_fs_model.clone(),
+                                                           sel_fs_model.clone()));
     engine.set_and_store_property("app_callback", appcallback.get_qobj());
 
     engine.set_property("vol_model",
