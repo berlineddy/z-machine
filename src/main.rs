@@ -6,14 +6,45 @@ use zfs::*;
 extern crate qml;
 use qml::*;
 
+Q_LISTMODEL_ITEM!{
+    pub VolumeModel<VolumeItem> {
+        name: String,
+        path: String,
+    }
+}
+impl VolumeItem {
+    pub fn new<S: Into<String>>(name: S, path: S) -> VolumeItem {
+        VolumeItem {
+            name: name.into(),
+            path: path.into(),
+        }
+    }
+}
+
+
+Q_LISTMODEL_ITEM!{
+    pub SnapshotModel<SnapshotItem> {
+        name: String,
+        path: String,
+    }
+}
+impl SnapshotItem {
+    pub fn new<S: Into<String>>(name: S, path: S) -> SnapshotItem {
+        SnapshotItem {
+            name: name.into(),
+            path: path.into(),
+        }
+    }
+}
+
 
 pub struct AppController {
-    volume_model: Arc<Mutex<Box<QListModel<'static>>>>,
-    snapshot_model: Arc<Mutex<Box<QListModel<'static>>>>,
+    volume_model: Arc<Mutex<VolumeModel>>,
+    snapshot_model: Arc<Mutex<SnapshotModel>>,
 }
 impl AppController {
-    fn new(vol: Arc<Mutex<Box<QListModel<'static>>>>,
-           snap: Arc<Mutex<Box<QListModel<'static>>>>)
+    fn new(vol: Arc<Mutex<VolumeModel>>,
+           snap: Arc<Mutex<SnapshotModel>>)
            -> AppController {
         AppController {
             volume_model: vol,
@@ -22,13 +53,16 @@ impl AppController {
     }
     pub fn on_volume_index_changed(&self, index: usize) {
         let volumes = get_volumes();
-        let ref mut s: QListModel =
-            **self.snapshot_model.as_ref().lock().expect("snapshot_model locked!");
+        if ! volumes.len() == 0
+        {
+            let ref mut s: SnapshotModel =
+                *self.snapshot_model.as_ref().lock().expect("snapshot_model locked!");
 
-        s.clear();
-        let snapshots = get_snapshots(volumes[index].path.clone());
-        for snapshot in snapshots {
-            s.insert_row(qvarlist![snapshot.name.clone()].into_iter());
+            s.clear();
+            let snapshots = get_snapshots(volumes[index].path.clone());
+            for snapshot in snapshots {
+                s.insert_item(SnapshotItem::new(snapshot.name.clone(), snapshot.path.clone()));
+            }
         }
     }
     pub fn on_snapshot_index_changed(&self, index: usize) {}
@@ -55,38 +89,26 @@ impl QAppCallback {
     }
 }
 
-Q_LISTMODEL_ITEM!{
-    pub TestModel<TestModelItem> {
-        name: String,
-    }
-}
-
-impl TestModelItem {
-    pub fn new() -> TestModelItem {
-        TestModelItem { name: "test".into() }
-    }
-}
 
 fn main() {
-
     let mut engine = QmlEngine::new();
-    let vol_model = Arc::new(Mutex::new(QListModel::new(&["name"])));
-    let snap_model = Arc::new(Mutex::new(QListModel::new(&["name"])));
+    let vol_model = Arc::new(Mutex::new(VolumeModel::new()));
+    let snap_model = Arc::new(Mutex::new(SnapshotModel::new()));
 
 
     let volumes = get_volumes();
     for volume in volumes {
         (*vol_model.as_ref().lock().expect("vol_model locked!"))
-            .insert_row(qvarlist![volume.name.clone()].into_iter());
+            .insert_item(VolumeItem::new(volume.name.clone(), volume.path.clone()));
     }
 
     let appcallback = QAppCallback::new(AppController::new(vol_model.clone(), snap_model.clone()));
     engine.set_and_store_property("app_callback", appcallback.get_qobj());
 
     engine.set_property("vol_model",
-                        &(**vol_model.as_ref().lock().expect("vol_model locked!")).get_qvar());
+                        &(*vol_model.as_ref().lock().expect("vol_model locked!")).get_qvar());
     engine.set_property("snap_model",
-                        &(**snap_model.as_ref().lock().expect("snap_model locked!")).get_qvar());
+                        &(*snap_model.as_ref().lock().expect("snap_model locked!")).get_qvar());
 
     engine.load_data(include_str!("ui.qml"));
     engine.exec();
