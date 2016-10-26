@@ -124,26 +124,6 @@ ApplicationWindow
             anchors.left: parent.left
 
 
-            ListModel {
-                id: libraryModel
-
-                ListElement {
-                    title: "A Masterpiece"
-                    author: "Gabriel"
-                }
-
-                ListElement {
-                    title: "Brilliance"
-                    author: "Jens"
-                }
-
-                ListElement {
-                    title: "Outstanding"
-                    author: "Frederik"
-                }
-            }
-
-
             TableView {
                 id: tbLeft
                 anchors.right: parent.horizontalCenter
@@ -153,22 +133,26 @@ ApplicationWindow
                 anchors.rightMargin: 0
 
                 TableViewColumn {
-                    role: "title"
-                    title: "Title"
+                    role: "name"
+                    title: "Name"
                     width: 100
                 }
 
                 TableViewColumn {
-                    role: "author"
-                    title: "Author"
+                    role: "filetype"
+                    title: "Type"
                     width: 100
                 }
 
-                model: libraryModel
+                model: current_fs_model
 
                 onClicked: {
                     tbRight.selection.clear()
                     tbRight.selection.select(row);
+                    app_callback.current_fs_index_changed(row);
+                }
+                onDoubleClicked: {
+                    app_callback.current_fs_index_double_clicked(row);
                 }
 
             }
@@ -182,21 +166,25 @@ ApplicationWindow
 
 
                 TableViewColumn {
-                    role: "title"
-                    title: "Title"
+                    role: "name"
+                    title: "Name"
                     width: 100
                 }
 
                 TableViewColumn {
-                    role: "author"
-                    title: "Author"
+                    role: "filetype"
+                    title: "Type"
                     width: 100
                 }
 
-                model: libraryModel
+                model: selected_fs_model
                 onClicked: {
                     tbLeft.selection.clear()
                     tbLeft.selection.select(row);
+                    app_callback.current_fs_index_changed(row);
+                }
+                onDoubleClicked: {
+                    app_callback.current_fs_index_double_clicked(row);
                 }
 
             }

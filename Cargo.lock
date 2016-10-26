@@ -3,7 +3,7 @@ name = "z-machine"
 version = "0.1.0"
 dependencies = [
  "lazy_static 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "qml 0.0.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "qml 0.0.8",
 ]
 
 [[package]]
@@ -19,7 +19,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "qml"
 version = "0.0.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "lazy_static 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.16 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -28,4 +27,3 @@ dependencies = [
 [metadata]
 "checksum lazy_static 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "49247ec2a285bb3dcb23cbd9c35193c025e7251bfce77c1d5da97e6362dffe7f"
 "checksum libc 0.2.16 (registry+https://github.com/rust-lang/crates.io-index)" = "408014cace30ee0f767b1c4517980646a573ec61a57957aeeabcac8ac0a02e8d"
-"checksum qml 0.0.8 (registry+https://github.com/rust-lang/crates.io-index)" = "2e8fea224d672d99707c12a3766437c8618c10947c4ada6dd24b1cc4656bcafa"

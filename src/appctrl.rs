@@ -1,4 +1,7 @@
 pub use std::sync::{Arc, Mutex};
+use std::fs::read_dir;
+use std::fmt::Write;
+use std::mem;
 
 use zfs::*;
 use qml::*;
@@ -51,6 +54,25 @@ impl FilesystemItem {
             atime: atime.into(),
         }
     }
+    pub fn new_from<S: Into<String>>(path: S) -> Vec<FilesystemItem> {
+        let mut res: Vec<FilesystemItem> = vec![];
+        res.push(FilesystemItem::new("..", "folder", "white", "today"));
+
+        if let Ok(entries) = read_dir(path.into()) {
+            for entry in entries {
+                if let Ok(entry) = entry {
+                    res.push(FilesystemItem::new(entry.file_name()
+                                                     .to_str()
+                                                     .expect("name not readable"),
+                                                 "folder",
+                                                 "white",
+                                                 "today"));
+                }
+            }
+        }
+
+        res
+    }
 }
 
 
@@ -59,6 +81,7 @@ pub struct AppController {
     snapshot_model: Arc<Mutex<SnapshotModel>>,
     current_fs_model: Arc<Mutex<FilesystemModel>>,
     selected_fs_model: Arc<Mutex<FilesystemModel>>,
+    cwd: Arc<Mutex<String>>,
 }
 impl AppController {
     pub fn new(vol: Arc<Mutex<VolumeModel>>,
@@ -71,6 +94,7 @@ impl AppController {
             snapshot_model: snap,
             current_fs_model: cur,
             selected_fs_model: sel,
+            cwd: Arc::new(Mutex::new("/".into())),
         }
     }
     pub fn on_volume_index_changed(&self, index: usize) {
@@ -86,7 +110,31 @@ impl AppController {
             }
         }
     }
-    pub fn on_snapshot_index_changed(&self, index: usize) {}
+
+    pub fn on_snapshot_index_changed(&self, index: usize) {
+        let ref mut c: FilesystemModel =
+            *self.current_fs_model.as_ref().lock().expect("current_fs_model locked!");
+        let ref mut cwd: String = *self.cwd.as_ref().lock().expect("current_fs_model locked!");
+        c.clear();
+        for entry in FilesystemItem::new_from(cwd.clone()) {
+            c.insert_item(entry);
+        }
+    }
+
+    pub fn on_current_fs_index_double_clicked(&self, index: usize) {
+        let ref mut c: FilesystemModel =
+            *self.current_fs_model.as_ref().lock().expect("current_fs_model locked!");
+        let ref mut cwd: String = *self.cwd.as_ref().lock().expect("current_fs_model locked!");
+
+        let files = FilesystemItem::new_from(cwd.clone());
+        assert!(files.len() > index);
+        let pwd = cwd.clone();
+        mem::replace(cwd,format!("{:?}/{:?}",pwd,files[index]));
+        c.clear();
+        for entry in files {
+            c.insert_item(entry);
+        }
+    }
 }
 
 
@@ -96,6 +144,8 @@ Q_OBJECT!{
         slots:
             fn volume_index_changed(index: i32);
             fn snapshot_index_changed(index: i32);
+            fn current_fs_index_changed(index: i32);
+            fn current_fs_index_double_clicked(index: i32);
         properties:
     }
 }
@@ -106,6 +156,14 @@ impl QAppCallback {
     }
     pub fn snapshot_index_changed(&self, index: i32) -> Option<&QVariant> {
         (*self.origin).on_snapshot_index_changed(index as usize);
+        None
+    }
+    pub fn current_fs_index_changed(&self, index: i32) -> Option<&QVariant> {
+        println!("{:#?}", index);
+        None
+    }
+    pub fn current_fs_index_double_clicked(&self, index: i32) -> Option<&QVariant> {
+        (*self.origin).on_current_fs_index_double_clicked(index as usize);
         None
     }
 }
